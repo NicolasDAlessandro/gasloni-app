@@ -20,7 +20,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     >
       <input
         type="text"
-        placeholder="Buscar por detalle (Enter para buscar)..."
+        placeholder="Buscar por detalle (Enter para buscar)"
         value={searchInput}
         onChange={(e) => setSearchInput(e.target.value)}
         className="flex-1 border border-gray-300 rounded px-5 py-3 text-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

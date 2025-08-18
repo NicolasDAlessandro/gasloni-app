@@ -1,21 +1,19 @@
+// ProductTable.tsx
 import React, { useEffect, useMemo, useState } from "react";
 import type { Product } from "../types/Product";
 import { useCart } from "../context/CartContext";
 import SearchBar from "./SearchBar";
 import PaymentOptions from "./PaymentOptions";
-import CartModal from "./CartModal";
-import NavButton from "./NavButton";
+import Toast from "./Toast"; 
 
 const ProductTable: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
-  const [showCart, setShowCart] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-
-  // IMPORTANTE: useCart expone 'items' y 'totalItems' (no 'cart')
-  const { add, totalItems } = useCart();
+  const { add } = useCart();
 
   useEffect(() => {
     const stored = localStorage.getItem("productos");
@@ -51,6 +49,7 @@ const ProductTable: React.FC = () => {
 
   const handleAgregar = (product: Product) => {
     add(product);
+    setToastMessage(`Producto "${product.detalle}" agregado al carrito ✅`);
   };
 
   const toggleExpand = (codigo: string) => {
@@ -59,33 +58,13 @@ const ProductTable: React.FC = () => {
 
   return (
     <div className="mt-4 relative">
-      {/* Botón carrito */}
-      <button
-        onClick={() => setShowCart(true)}
-        className="absolute top-2 right-2 p-2 rounded-full hover:bg-gray-200"
-        aria-label="Abrir carrito"
-      >
-        <svg
-          className="w-6 h-6 text-gray-800"
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 4h1.5L9 16h8m-8 0a2 2 0 100 4 2 2 0 000-4zm8 0a2 2 0 100 4 2 2 0 000-4zm-8.5-3h9.25L19 7H7.312"
-          />
-        </svg>
-
-        {totalItems > 0 && (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1 rounded-full">
-            {totalItems}
-          </span>
-        )}
-      </button>
+      {toastMessage && (
+        <Toast
+          message={toastMessage}
+          type="success"
+          onClose={() => setToastMessage(null)}
+        />
+      )}
 
       <SearchBar
         searchInput={searchInput}
@@ -93,12 +72,6 @@ const ProductTable: React.FC = () => {
         handleSubmit={handleSubmit}
         handleClear={handleClear}
       />
-      <NavButton onOpen={() => setShowCart(true)} />
-
-      {/* Información de productos */}
-      <div className="text-sm text-gray-600 mb-2 px-2">
-        Productos totales: {allProducts.length} — Mostrando: {filteredProducts.length}
-      </div>
 
       <div className="relative overflow-x-auto shadow-md sm:rounded-lg max-h-[600px] overflow-y-auto">
         <table className="w-full text-sm text-left text-gray-500 border-gray-300">
@@ -161,10 +134,6 @@ const ProductTable: React.FC = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Modal carrito */}
-      <CartModal open={showCart} onClose={() => setShowCart(false)} />
-        
     </div>
   );
 };

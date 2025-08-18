@@ -1,5 +1,3 @@
-// src/components/ProductUploader.tsx
-
 import React from "react";
 import * as XLSX from "xlsx";
 import type { Product } from "../types/Product";
@@ -22,22 +20,17 @@ const ProductUploader: React.FC = () => {
         const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { raw: false });
 
         const products: Product[] = jsonData
-        .map((row) => {
+          .map((row) => {
             const normalizedRow = Object.fromEntries(
               Object.entries(row).map(([k, v]) => [k.trim().toLowerCase(), v])
             );
 
             const codigo = normalizedRow["codigo"] ?? normalizedRow["código"];
-            const detalle = normalizedRow["detalle"] 
+            const detalle = normalizedRow["detalle"];
             const stock = normalizedRow["stock"];
             const precio = normalizedRow["precio"];
 
-            if (
-              !codigo ||
-              !detalle ||
-              stock === undefined ||
-              precio === undefined
-            ) {
+            if (!codigo || !detalle || stock === undefined || precio === undefined) {
               return null; // fila inválida
             }
 
@@ -47,9 +40,8 @@ const ProductUploader: React.FC = () => {
               stock: Number(stock),
               precio: Number(precio),
             };
-        })
-        .filter((p): p is Product => p !== null);
-
+          })
+          .filter((p): p is Product => p !== null);
 
         if (products.length === 0) {
           alert("No se encontraron productos válidos en el archivo.");
@@ -72,9 +64,18 @@ const ProductUploader: React.FC = () => {
   };
 
   return (
-    <div>
-      <h2>Cargar productos desde Excel</h2>
-      <input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} />
+    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-150px)] px-4">
+      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
+        <h2 className="text-lg font-semibold mb-4 text-center">Actualizar productos desde Excel</h2>
+        <div className="flex items-center gap-4">
+          <input
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+            className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
     </div>
   );
 };
