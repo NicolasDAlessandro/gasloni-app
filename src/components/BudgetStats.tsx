@@ -3,8 +3,8 @@ import React, { useState, useMemo, useEffect } from "react";
 
 interface Budget {
   id: number;
-  vendedor: string; // ID del vendedor
-  fecha: string; // formato YYYY-MM-DD
+  vendedor: string; 
+  fecha: string; 
   total: number;
 }
 

@@ -1,81 +1,127 @@
-import React from "react";
-import * as XLSX from "xlsx";
-import type { Product } from "../types/Product";
-import { saveProducts } from "../utils/localStorage";
+import React, { useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { productService } from "../services/api";
+import type { CreateProductDto } from "../types/Api";
+import Toast from "./Toast";
 
 const ProductUploader: React.FC = () => {
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const { user } = useAuth();
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const reader = new FileReader();
+  const [newProduct, setNewProduct] = useState<CreateProductDto>({
+    name: "",
+    description: "",
+    price: 0,
+    stock: 0,
+    category: "",
+    imageUrl: "",
+  });
 
-    reader.onload = (e) => {
-      try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
+  const handleAddProduct = async () => {
+    if (!newProduct.name || !newProduct.price || !newProduct.stock) {
+      setToastMessage("Por favor completa todos los campos obligatorios.");
+      setShowToast(true);
+      return;
+    }
 
-        const jsonData = XLSX.utils.sheet_to_json<Record<string, any>>(worksheet, { raw: false });
+    setLoading(true);
+    try {
+      const productData = {
+        ...newProduct,
+        price: Number(newProduct.price),
+        stock: Number(newProduct.stock),
+      };
 
-        const products: Product[] = jsonData
-          .map((row) => {
-            const normalizedRow = Object.fromEntries(
-              Object.entries(row).map(([k, v]) => [k.trim().toLowerCase(), v])
-            );
-
-            const codigo = normalizedRow["codigo"] ?? normalizedRow["código"];
-            const detalle = normalizedRow["detalle"];
-            const stock = normalizedRow["stock"];
-            const precio = normalizedRow["precio"];
-
-            if (!codigo || !detalle || stock === undefined || precio === undefined) {
-              return null; // fila inválida
-            }
-
-            return {
-              codigo: Number(codigo),
-              detalle: String(detalle),
-              stock: Number(stock),
-              precio: Number(precio),
-            };
-          })
-          .filter((p): p is Product => p !== null);
-
-        if (products.length === 0) {
-          alert("No se encontraron productos válidos en el archivo.");
-          return;
-        }
-        console.log(products);
-        saveProducts(products);
-        alert(`Se cargaron ${products.length} productos correctamente.`);
-      } catch (error) {
-        console.error(error);
-        alert("Error al procesar el archivo Excel. Verifica el formato y los datos.");
-      }
-    };
-
-    reader.onerror = () => {
-      alert("Error al leer el archivo.");
-    };
-
-    reader.readAsArrayBuffer(file);
+      await productService.create(productData);
+      
+      setToastMessage("Producto agregado exitosamente.");
+      setNewProduct({
+        name: "",
+        description: "",
+        price: 0,
+        stock: 0,
+        category: "",
+        imageUrl: "",
+      });
+    } catch (error: any) {
+      setToastMessage(error.response?.data?.message || "Error al agregar producto");
+    } finally {
+      setLoading(false);
+      setShowToast(true);
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[calc(100vh-150px)] px-4">
-      <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-lg">
-        <h2 className="text-lg font-semibold mb-4 text-center">Actualizar productos desde Excel</h2>
-        <div className="flex items-center gap-4">
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            onChange={handleFileUpload}
-            className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <div className="p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-4">Subir Productos</h2>
+      
+      {loading && (
+        <div className="mb-4 text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-sm text-gray-600">Cargando...</p>
         </div>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input
+          type="text"
+          placeholder="Nombre del producto"
+          value={newProduct.name}
+          onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <input
+          type="number"
+          placeholder="Precio"
+          value={newProduct.price}
+          onChange={(e) => setNewProduct({ ...newProduct, price: parseFloat(e.target.value) })}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <input
+          type="number"
+          placeholder="Stock"
+          value={newProduct.stock}
+          onChange={(e) => setNewProduct({ ...newProduct, stock: parseInt(e.target.value) })}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <input
+          type="text"
+          placeholder="Categoría"
+          value={newProduct.category}
+          onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value })}
+          className="border rounded px-3 py-2"
+          required
+        />
+        <textarea
+          placeholder="Descripción"
+          value={newProduct.description}
+          onChange={(e) => setNewProduct({ ...newProduct, description: e.target.value })}
+          className="border rounded px-3 py-2"
+          rows={3}
+        />
+        <input
+          type="url"
+          placeholder="URL de imagen (opcional)"
+          value={newProduct.imageUrl}
+          onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
+          className="border rounded px-3 py-2"
+        />
       </div>
+      
+      <button
+        onClick={handleAddProduct}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+        disabled={loading}
+      >
+        {loading ? "Cargando..." : "Agregar Producto"}
+      </button>
+      
+      {showToast && <Toast message={toastMessage} onClose={() => setShowToast(false)} />}
     </div>
   );
 };

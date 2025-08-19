@@ -68,5 +68,5 @@ const PaymentMethodsList: React.FC<PaymentMethodsListProps> = ({
   );
 };
 
-// Export por default para importar fácil
+
 export default PaymentMethodsList;

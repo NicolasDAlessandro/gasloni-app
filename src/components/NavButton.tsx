@@ -7,7 +7,7 @@ const NavButton: React.FC = () => {
 
   const handleClick = (link: string) => {
     console.log(`Navigating to: ${link}`);
-    setOpen(false); // cerrar dropdown al hacer click
+    setOpen(false); 
   };
 
   return (

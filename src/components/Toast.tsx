@@ -10,7 +10,7 @@ const Toast: React.FC<ToastProps> = ({ message, type = "success", onClose }) => 
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose();
-    }, 3000); // Cierra automáticamente en 3s
+    }, 3000); 
     return () => clearTimeout(timer);
   }, [onClose]);
 
