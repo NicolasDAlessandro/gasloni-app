@@ -22,5 +22,5 @@ Antes de empezar asegurate de tener instalado:
 Cloná este repositorio:
   
 ```bash
-git clone https://github.com/tu-usuario/visualizador-precios.git
+git clone https://github.com/NicolasDAlessandro/visualizador-precios.git
 cd visualizador-precios
